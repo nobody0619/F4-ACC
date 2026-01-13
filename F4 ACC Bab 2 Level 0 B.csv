@@ -12,3 +12,7 @@
 ,radio,Untung Bersih,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,E,
 ,radio,Ambilan,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,E,
 ,radio,Rugi Bersih,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,E,
+,radio,Belanja Belum Bayar,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,C,
+,radio,Belanja Prabayar,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,A,
+,radio,Hasil Belum Terima,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,A,
+,radio,Hasil Belum Terperoleh,Aset Semasa,Aset Bukan Semasa,Liabiliti Semasa,Liabiliti Bukan Semasa,Ekuiti Pemilik,C,
