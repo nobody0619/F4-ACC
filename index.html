@@ -83,7 +83,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.04.17.2</div>
+    <div class="version-tag" id="versionTag">版本：2026.04.17.4</div>
   </div>
 </div>
 
@@ -105,7 +105,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.04.17.2</div>
+    <div class="version-tag">版本：2026.04.17.4</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
+  const APP_VERSION = '2026.04.17.4';
 
   let user = '';
   let displayUser = '';
@@ -217,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let countCache = new Map();
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
+
+  ensureLatestVersion_();
 
   const saved = readSavedAuth();
   if (saved && saved.user && saved.password) {
@@ -242,6 +245,22 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
+
+  function ensureLatestVersion_(){
+    try{
+      const key = 'kee_quiz_app_version';
+      const oldV = localStorage.getItem(key) || '';
+      if (oldV !== APP_VERSION) {
+        localStorage.setItem(key, APP_VERSION);
+        const u = new URL(location.href);
+        if (u.searchParams.get('v') !== APP_VERSION) {
+          u.searchParams.set('v', APP_VERSION);
+          location.replace(u.toString());
+        }
+      }
+    }catch(_){}
+  }
+
   function toggleRules(show){
     document.getElementById('rulesMask').style.display = show ? 'flex' : 'none';
   }
@@ -258,8 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!rows.length) { box.innerHTML = '<div class="muted">暂时还没有排行榜数据</div>'; return; }
       const html = ['<table style="width:100%;border-collapse:collapse">', '<tr><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">排名</th><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">名字</th><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">Level</th><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">EXP</th><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">小怪</th><th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px">Boss</th></tr>'];
       rows.forEach((row, idx) => {
+        const rank = idx + 1;
+        const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
         html.push(`<tr>
-          <td style="padding:8px;border-bottom:1px solid #f3f4f6">${escapeHtml(String(row.Rank || idx+1))}</td>
+          <td style="padding:8px;border-bottom:1px solid #f3f4f6">${medal}${rank}</td>
           <td style="padding:8px;border-bottom:1px solid #f3f4f6">${escapeHtml(String(row.Name || '-'))}</td>
           <td style="padding:8px;border-bottom:1px solid #f3f4f6">${escapeHtml(String(row.Level || 1))}</td>
           <td style="padding:8px;border-bottom:1px solid #f3f4f6">${escapeHtml(String(row.EXP || 0))}</td>
