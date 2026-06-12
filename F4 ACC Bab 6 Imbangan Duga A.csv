@@ -1,0 +1,13 @@
+﻿title,type,question,A,B,answer,image
+Debit Kredit,radio,Aset,Debit,Kredit,A,
+,radio,Belanja,Debit,Kredit,A,
+,radio,Ambilan,Debit,Kredit,A,
+,radio,Belian,Debit,Kredit,A,
+,radio,Pulangan Jualan,Debit,Kredit,A,
+,radio,Pulangan Masuk,Debit,Kredit,A,
+,radio,Pulangan Keluar,Debit,Kredit,B,
+,radio,Pulangan Belian,Debit,Kredit,B,
+,radio,Modal,Debit,Kredit,B,
+,radio,Liabiliti,Debit,Kredit,B,
+,radio,Hasil,Debit,Kredit,B,
+,radio,Jualan,Debit,Kredit,B,
