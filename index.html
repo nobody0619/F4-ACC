@@ -183,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.19.2</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.19.3</div>
   </div>
 </div>
 
@@ -226,7 +226,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.19.2</div>
+    <div class="version-tag">版本：2026.06.19.3</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.19.2';
+  const APP_VERSION = '2026.06.19.3';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -378,6 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
   let coinState = { coins:0, totalEarned:0, totalSpent:0 };
+  let lastAccuracyPct = 0;
+  let lastCoinReward = { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
 
   ensureLatestVersion_();
 
@@ -1714,6 +1716,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     currentExpGain = exp;
+    lastAccuracyPct = accuracyPct;
+    lastCoinReward = coinReward || { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
     const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
 
     if (exp > 0 && currentMode !== 'wrongbook') {
@@ -1861,15 +1865,15 @@ document.addEventListener('DOMContentLoaded', () => {
       wrong:firstTryWrong,
       rawCorrect:correct,
       rawWrong:wrong,
-      accuracyPct: Number(accuracyPct || 0),
+      accuracyPct: Number(lastAccuracyPct || 0),
       time: Number(durationSeconds || 0),
       mode: currentMode,
       expGained: currentExpGain,
-      coinBase: Number(coinReward.baseCoins || 0),
-      coinPenalty: Number(coinReward.penaltyCoins || 0),
-      coinBonus: Number(coinReward.bonusCoins || 0),
-      coinFinal: Number(coinReward.finalCoins || 0),
-      coinNote: coinReward.note || ''
+      coinBase: Number((lastCoinReward && lastCoinReward.baseCoins) || 0),
+      coinPenalty: Number((lastCoinReward && lastCoinReward.penaltyCoins) || 0),
+      coinBonus: Number((lastCoinReward && lastCoinReward.bonusCoins) || 0),
+      coinFinal: Number((lastCoinReward && lastCoinReward.finalCoins) || 0),
+      coinNote: (lastCoinReward && lastCoinReward.note) || ''
     };
 
     document.getElementById('submit-status').textContent = '正在送出成绩...';
