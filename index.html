@@ -183,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.10.1</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.10.2</div>
   </div>
 </div>
 
@@ -226,7 +226,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.10.1</div>
+    <div class="version-tag">版本：2026.06.10.2</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.10.1';
+  const APP_VERSION = '2026.06.10.2';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -682,6 +682,45 @@ document.addEventListener('DOMContentLoaded', () => {
     catch(e) { return String(url || ''); }
   }
 
+  function normalizeCountUrl(url){
+    try {
+      const u = new URL(String(url || ''), location.href);
+      u.hash = '';
+      u.search = '';
+      return u.href.replace(/\/+$/, '').toLowerCase();
+    } catch(e) {
+      return String(url || '').trim().replace(/\/+$/, '').toLowerCase();
+    }
+  }
+
+  function urlFileName(url){
+    try {
+      const u = new URL(String(url || ''), location.href);
+      return decodeURIComponent(u.pathname.split('/').pop() || '').trim().toLowerCase();
+    } catch(e) {
+      return String(url || '').split('?')[0].split('#')[0].split('/').pop().trim().toLowerCase();
+    }
+  }
+
+  function getQuestionCountFromCache(url){
+    const exact = absoluteUrl(url);
+    const norm = normalizeCountUrl(url);
+    const file = urlFileName(url);
+
+    if (countCache.has(exact)) return countCache.get(exact);
+    if (countCache.has(norm)) return countCache.get(norm);
+    if (countCache.has(file)) return countCache.get(file);
+
+    // 最后 fallback：SheetURL 与 Chapters.csv 的 URL 可能一个是 raw，一个是 pages。
+    // 用文件名配对，避免题数一直显示 '-'
+    if (file) {
+      for (const [k,v] of countCache.entries()) {
+        if (String(k).endsWith('/' + file) || String(k) === file) return v;
+      }
+    }
+    return null;
+  }
+
   function questionCacheKey(url){
     let s = absoluteUrl(url);
     let h = 0;
@@ -775,7 +814,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const r = await apiFetch({ action:'getQuestionCounts', book }, 0);
       if (!r || !r.ok || !r.counts) return;
-      Object.entries(r.counts).forEach(([url, count]) => countCache.set(absoluteUrl(url), Number(count || 0)));
+      Object.entries(r.counts).forEach(([url, count]) => {
+        const n = Number(count || 0);
+        countCache.set(absoluteUrl(url), n);
+        countCache.set(normalizeCountUrl(url), n);
+        const fn = urlFileName(url);
+        if (fn) countCache.set(fn, n);
+      });
       updateQuestionCountDisplay();
     } catch(e) {}
   }
@@ -786,8 +831,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const monsterId = buildMonsterId(row);
         const el = document.getElementById('count_' + hashId(monsterId));
         if (!el) continue;
-        const key = absoluteUrl(row[sheetKey]);
-        if (countCache.has(key)) el.textContent = String(countCache.get(key));
+        const c = getQuestionCountFromCache(row[sheetKey]);
+        if (c != null) el.textContent = String(c);
       }
     } catch(e) {}
   }
@@ -1067,8 +1112,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = progressState.monsters[monsterId] || {};
     const titleText = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     const countId = 'count_' + hashId(monsterId);
-    const countKey = absoluteUrl(row[sheetKey]);
-    const cnt = countCache.has(countKey) ? String(countCache.get(countKey)) : '-';
+    const cachedCnt = getQuestionCountFromCache(row[sheetKey]);
+    const cnt = cachedCnt == null ? '-' : String(cachedCnt);
     const now = nowMs();
     const isDead = st.reviveAt && Number(st.reviveAt) > now;
     const statusText = isDead ? `💀 已击败（${daysLeft(st.reviveAt)}后复活）` : '🟢 存活';
