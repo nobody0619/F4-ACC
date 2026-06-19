@@ -183,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.19.1</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.19.2</div>
   </div>
 </div>
 
@@ -226,7 +226,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.19.1</div>
+    <div class="version-tag">版本：2026.06.19.2</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.19.1';
+  const APP_VERSION = '2026.06.19.2';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -367,6 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let battleEndedByDeath = false;
   let lastFocusId = '';
   let afterFinishRefreshTimer = null;
+  let isQuizActive = false;
+  let allowAutoVersionRefresh = false;
   let currentMonsterRowsForBoss = [];
   let wrongBookMap = {};
   let wrongBookMasteredLocal = new Set();
@@ -410,34 +412,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   function ensureLatestVersion_(){
+    // 安全版：不自动 location.replace。
+    // 之前版本更新 / 后台动作完成时，可能让学生做到一半跳回首页。
+    // 这里只记录版本；需要更新时由老师/学生手动点“更新页面”。
     try{
       const key = 'kee_quiz_app_version';
-      const oldV = localStorage.getItem(key) || '';
-      if (oldV !== APP_VERSION) {
-        localStorage.setItem(key, APP_VERSION);
-        const u = new URL(location.href);
-        if (u.searchParams.get('v') !== APP_VERSION) {
-          u.searchParams.set('v', APP_VERSION);
-          location.replace(u.toString());
-        }
-      }
+      localStorage.setItem(key, APP_VERSION);
     }catch(_){}
-  }
-
-
-  function ensureLatestVersion_(){
-    try {
-      const key = 'kee_quiz_app_version';
-      const oldV = localStorage.getItem(key) || '';
-      if (oldV !== APP_VERSION) {
-        localStorage.setItem(key, APP_VERSION);
-        const u = new URL(location.href);
-        if (u.searchParams.get('v') !== APP_VERSION) {
-          u.searchParams.set('v', APP_VERSION);
-          location.replace(u.toString());
-        }
-      }
-    } catch(_) {}
   }
 
   async function handleInstallToHome(){
@@ -940,6 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function showWrongBook(){
+    isQuizActive = false;
     document.getElementById('chapters').style.display='none';
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='none';
@@ -1051,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wrongBook').style.display='none';
     document.getElementById('chapters').style.display='none';
     document.getElementById('finish').style.display='none';
+    isQuizActive = true;
     document.getElementById('quiz').style.display='block';
     document.getElementById('backToListTop').textContent = '📝 回到错题本';
     document.getElementById('quiz-title').textContent = '错题重练';
@@ -1084,6 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function showChapterList(){
+    isQuizActive = false;
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
     const wrap = document.getElementById('chapterWrap');
@@ -1619,6 +1603,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           await loadProgress();
           updateHeader();
+          if (isQuizActive) return;
           if (idx === attempts.length - 1 && status) {
             status.textContent = (status.textContent || '').replace('（后台处理中）','') + '｜怪兽状态已更新';
           }
@@ -1663,6 +1648,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('题库没有成功加载，系统不会提交空成绩。请等几秒后再试。');
       return showChapterList();
     }
+    isQuizActive = false;
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='block';
     launchFireworks();
